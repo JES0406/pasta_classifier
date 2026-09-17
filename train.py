@@ -12,6 +12,8 @@ import torch.nn as nn
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset, random_split
 
+import mlflow
+
 CLASSES = ["spaghetti", "tagliatelle", "fusilli", "penne"]
 DATA_DIR = "data/pasta"
 
@@ -49,6 +51,34 @@ class PastaCNN(nn.Module):
         return self.classifier(x)
 
 
+def train_epoch(model, train_loader, opt, loss_fn, n_train):
+    model.train()
+    total_loss = 0.0
+    correct = 0
+    total = 0
+    for x, y in train_loader:
+        opt.zero_grad()
+        preds = model(x)
+        loss = loss_fn(preds, y)
+        loss.backward()
+        opt.step()
+        total_loss += loss.item() * x.size(0)
+        correct += (preds.argmax(1) == y).sum().item()
+        total += y.size(0)
+    train_loss = total_loss / n_train
+    train_acc = correct / n_train
+    return train_loss, train_acc
+
+def eval_epoch(model, val_loader, n_val):
+    model.eval()
+    correct = 0
+    with torch.no_grad():
+        for x, y in val_loader:
+            preds = model(x).argmax(1)
+            correct += (preds == y).sum().item()
+    val_acc = correct / n_val
+    return val_acc
+
 def run(epochs, lr, batch_size, seed=42):
     torch.manual_seed(seed)
 
@@ -62,27 +92,17 @@ def run(epochs, lr, batch_size, seed=42):
     model = PastaCNN()
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = nn.CrossEntropyLoss()
+    
+    with mlflow.start_run():
+        mlflow.log_params({"epochs": epochs, "lr": lr, "batch_size": batch_size})
+        for epoch in range(epochs):
+            train_loss, train_acc = train_epoch(model, train_loader, opt, loss_fn, n_train)
+            val_acc = eval_epoch(model, val_loader, n_val)
 
-    for epoch in range(epochs):
-        model.train()
-        total_loss = 0.0
-        for x, y in train_loader:
-            opt.zero_grad()
-            loss = loss_fn(model(x), y)
-            loss.backward()
-            opt.step()
-            total_loss += loss.item() * x.size(0)
-        train_loss = total_loss / n_train
+            mlflow.log_metrics({"train_loss": train_loss, "train_acc": train_acc, "val_acc": val_acc})
 
-        model.eval()
-        correct = 0
-        with torch.no_grad():
-            for x, y in val_loader:
-                preds = model(x).argmax(1)
-                correct += (preds == y).sum().item()
-        val_acc = correct / n_val
-
-        print(f"epoch {epoch+1}/{epochs}  train_loss={train_loss:.4f}  val_acc={val_acc:.4f}")
+            print(f"epoch {epoch+1}/{epochs}  train_loss={train_loss:.4f}  train_acc={train_acc:.4f}  val_acc={val_acc:.4f}")
+        mlflow.pytorch.log_model(model, "pasta-cnn-model")
 
     print(f"final val_accuracy={val_acc:.4f}")
     return val_acc
