@@ -102,7 +102,8 @@ def run(epochs, lr, batch_size, seed=42):
             mlflow.log_metrics({"train_loss": train_loss, "train_acc": train_acc, "val_acc": val_acc})
 
             print(f"epoch {epoch+1}/{epochs}  train_loss={train_loss:.4f}  train_acc={train_acc:.4f}  val_acc={val_acc:.4f}")
-        mlflow.pytorch.log_model(model, "pasta-cnn-model")
+        x_sample, _ = next(iter(train_loader))
+        mlflow.pytorch.log_model(model, "pasta-cnn-model", input_example=x_sample[:1].numpy())
 
     print(f"final val_accuracy={val_acc:.4f}")
     return val_acc
