@@ -1,10 +1,9 @@
 # Pasta Classifier
 
-## Toy example to learn to deploy a real model using MLFlow
-
-Synthetic 4-class image dataset (spaghetti / tagliatelle / fusilli / penne),
-generated procedurally, trained with a small CNN in PyTorch. MLflow tracking
-is left out for the future.
+MLOps toy project: a small PyTorch CNN classifying 4 synthetic pasta shapes
+(spaghetti / tagliatelle / fusilli / penne), with the full pipeline —
+data versioning (DVC), remote storage (DagsHub S3), and experiment tracking
+(MLflow on DagsHub) — wired around it.
 
 DagsHub project (data + MLflow tracking): https://dagshub.com/JES0406/pasta_classifier
 
@@ -52,11 +51,34 @@ uv pip install -r requirements.txt
 python generate_pasta.py
 
 # 2. Train the CNN
-python train.py --epochs 10 --lr 1e-3 --batch-size 16
+python train.py
 ```
 
-`train.py` logs params/metrics/model to MLflow. Exact run command (tracking
-URI, DagsHub credentials, etc.) still being adapted — TODO once settled.
+`train.py` calls `dagshub.init(repo_owner="JES0406", repo_name="pasta_classifier", mlflow=True)`,
+so params/metrics/model get logged to this project's MLflow tab on DagsHub
+(browser-based GitHub OAuth on first run, no manual token/`.env` needed).
+
+Training args (all optional):
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--epochs` | `10` | Training epochs |
+| `--lr` | `1e-3` | Adam learning rate |
+| `--batch-size` | `16` | Batch size for train/val loaders |
+
+Example: `python train.py --epochs 20 --lr 1e-4 --batch-size 32`
+
+## Project structure
+
+```
+.
+├── generate_pasta.py   # builds the synthetic dataset -> data/<class>/*.png
+├── train.py             # CNN + training loop, MLflow logging via DagsHub
+├── data/                # dataset (DVC-tracked, pulled from DagsHub S3)
+├── data.dvc             # DVC pointer file for data/
+├── requirements.txt
+└── docs/                # assignment write-up + process screenshots
+```
 
 ## Dependencies
 
@@ -64,6 +86,15 @@ URI, DagsHub credentials, etc.) still being adapted — TODO once settled.
 numpy==1.26.4
 torch
 pillow
-dvc==3.32.0
-mlflow
+dvc[s3]>=3.60
+mlflow>=3.0
+dagshub==0.7.2
 ```
+
+## License
+
+[MIT](LICENSE)
+
+## Author
+
+Javier Escobar Serrano — [@JES0406](https://github.com/JES0406)

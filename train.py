@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 import mlflow
 import dagshub
 
+
 CLASSES = ["spaghetti", "tagliatelle", "fusilli", "penne"]
 DATA_DIR = "data"
 
