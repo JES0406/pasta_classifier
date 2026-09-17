@@ -13,6 +13,7 @@ from PIL import Image
 from torch.utils.data import DataLoader, Dataset, random_split
 
 import mlflow
+import dagshub
 
 CLASSES = ["spaghetti", "tagliatelle", "fusilli", "penne"]
 DATA_DIR = "data"
@@ -81,6 +82,7 @@ def eval_epoch(model, val_loader, n_val):
 
 def run(epochs, lr, batch_size, seed=42):
     torch.manual_seed(seed)
+    dagshub.init(repo_owner='JES0406', repo_name='pasta_classifier', mlflow=True)
 
     dataset = PastaDataset()
     n_val = int(0.2 * len(dataset))

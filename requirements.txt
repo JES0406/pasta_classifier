@@ -1,5 +1,6 @@
 numpy==1.26.4
 torch
 pillow
-dvc==3.32.0
-mlflow
+dvc[s3]>=3.60
+mlflow>=3.0
+dagshub==0.7.2
