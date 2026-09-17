@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 import mlflow
 
 CLASSES = ["spaghetti", "tagliatelle", "fusilli", "penne"]
-DATA_DIR = "data/pasta"
+DATA_DIR = "data"
 
 
 class PastaDataset(Dataset):

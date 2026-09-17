@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw
 CLASSES = ["spaghetti", "tagliatelle", "fusilli", "penne"]
 IMG_SIZE = 64
 IMAGES_PER_CLASS = 200
-OUT_DIR = "data/pasta"
+OUT_DIR = "data"
 SEED = 42
 
 
